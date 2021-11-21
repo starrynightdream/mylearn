@@ -1,5 +1,5 @@
 # loading now
-<style>
+<style type="text/css">
     .contain{
         position: absolute;
         width: 50vw;
