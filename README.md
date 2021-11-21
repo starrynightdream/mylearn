@@ -1,11 +1,17 @@
 # loading now
-<style type="text/css">
-    .contain{
-        position: absolute;
-        width: 50vw;
-        height: 50vw;
-        left: 25vw;
-        background-color: red;
-    }
-</style>
-<div class="contain"> </div>
+
+```c++
+cout<<"code please"<<endl;
+```
+
+```python
+print('code please')
+```
+
+```javascript
+console.log('code please')
+```
+
+```r
+print("code please")
+```
