@@ -3,13 +3,16 @@
 #include <iostream>
 using namespace std;
 
+#include <string.h>
+#include "./util.cpp"
+
 // 字符串匹配
 // KMP
 int* getnext(const char* prstr, int n)
 {
-    int* next = new int[n];
+    int* next = new int[n + 1];
     int k=-1; next[0] = -1;
-    for (int i=0; i<n; ++i)
+    for (int i=0; i< n;)
     {
         if (k == -1 || prstr[k] == prstr[i])
         {
@@ -17,6 +20,8 @@ int* getnext(const char* prstr, int n)
             next[i] = k;
         } else k = next[k];
     }
+    show(next, n + 1);
+    return next;
 }
 int KMP(const char* str1, int m, const char* str2, int n)
 {
@@ -45,5 +50,7 @@ int KMP(const char* str1, int m, const char* str2, int n)
 
 int main()
 {
-
+    char a[] = "1234671231212421212125121212128721212467";
+    char b[] = "12125";
+    cout<<KMP(a,strlen(a), b, strlen(b))<<endl;
 }
