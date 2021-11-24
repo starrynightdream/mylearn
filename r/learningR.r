@@ -56,6 +56,10 @@ my.function.testCUse = function(time) {
 }
 
 my.function.deffWithNaAndNull = function () {
+    speak <- "NA mean missing, NULL mean no data there"
+    test <-  c(NA, NULL, NULL)
+    print( length(test))
+    print( test)
 }
 
 my.function.dms = function () {
@@ -153,13 +157,18 @@ my.function.useMatrix = function() {
     print(tempMatrix[1:2, c(1, 3)])
     print(tempMatrix[-1, -2])
 
-    # the data will keep matrix with drop false
+    # the data will keep matrix type with setting 'drop=false'
     print(tempMatrix[1,])
     print(tempMatrix[1, , drop=FALSE])
 
     #logical
     print(tempMatrix[c(T,F,T),])
     print(tempMatrix[ , tempMatrix[1,]>-1])
+
+    # *
+    aMatrix = matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3)
+    bMatrix = matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3)
+    print(aMatrix %*% bMatrix)
 }
 
 my.function.useArray = function() {
@@ -230,9 +239,31 @@ my.function.listFunc = function() {
     print(extremesValues[1:5])
 }
 
+my.function.DataFrameUse = function() {
+    # init
+    comic <- data.frame(
+        Name = c("chino", "cocoa", "yiliya", "antna", "poruno"),
+        From = c("rabbit", "rabbit", "fate", "donadona", "donadona"),
+        tag = c("coffee", "sister", "magic", "hello CQ", "driver"),
+        id = c(3, 1, 44, 23, 12)
+    )
+
+    # info
+    length(comic)
+    names(comic)
+
+    # col
+    print(comic$tag)
+    pairs(comic)
+}
+
 # checkData = c(APath = rep( c(1, 2, 3), c(2, 3, 1)), BPath = c(4, 5, 6))
 # my.function.dataInfo(checkData)
-my.function.listFunc()
+
+test = "A"
+x = switch(test, 
+A = "A Word", B = "Boots")
+print(x)
 
 # 9-14
 # print(getwd())

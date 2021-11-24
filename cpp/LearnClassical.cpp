@@ -1,6 +1,7 @@
 // LearnClassical.cpp
 // 经典问题的解
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 // 约瑟夫环 （报数退出序）
@@ -88,6 +89,40 @@ void othermoveback(int* a, int n, int m)
         a[i] = a[i-1];
     a[0] = temp;
     othermoveback(a, n, m-1);
+}
+
+
+void YanHunA(int n)
+{
+    int* datas = new int[n];
+    for (int line = 0; line < n; ++line)
+    {
+        datas[line] = 1;
+        for (int idx = line - 1; idx > 0; --idx)
+        {
+            datas[idx] += datas[idx - 1];
+        }
+        int time = n - line - 1;
+        for (int i = 0; i < time; ++i)
+            cout<<setw(3)<<' ';
+        for (int i = 0; i < line + 1; ++i)
+            cout<<setw(6)<<datas[i];
+        cout<<endl;
+    }
+}
+
+void YanHunB(int n)
+{
+    int* datas = new int[n];
+    for (int line = 0; line < n; ++line)
+    {
+        datas[line] = 1;
+        for (int idx = line - 1; idx > 0; --idx)
+        {
+            datas[idx] += datas[idx - 1];
+        }
+        show(datas, line + 1);
+    }
 }
 
 int main()
