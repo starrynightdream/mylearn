@@ -2,6 +2,7 @@
 // 经典问题的解
 #include <iostream>
 #include <iomanip>
+#include <math.h>
 using namespace std;
 
 // 约瑟夫环 （报数退出序）
@@ -125,10 +126,96 @@ void YanHunB(int n)
     }
 }
 
+struct Node
+{
+    int val;
+    Node* next;
+};
+class List{
+    Node* head;
+    Node* end;
+public:
+    List(){
+        end = head = new Node();
+    }
+    List(int* arr, int n){
+        for (int i=0; i < n; ++i)
+        {
+            insert(arr[i]);
+        }
+    }
+    void insert(int n)
+    {
+        end->next = new Node{n};
+        end = end->next;
+    }
+    int size()
+    {
+        int i = 0; Node* temp = head;
+        while (head != end)
+        {
+            temp = temp->next;
+            ++i;
+        }
+        return i;
+    }
+    int remove(int x, bool all = true)
+    {
+        if (empty())
+            return 0;
+        Node* ptr = head->next, *temp = head;
+        int num = 0;
+        while (ptr != nullptr)
+        {
+            if (ptr->val == x)
+            {
+                temp->next = ptr->next;
+                delete ptr;
+                if (!all)
+                    return 1;
+                num++;
+                ptr = temp->next;
+            }
+            else
+            {
+                ptr = ptr->next;
+                temp = temp->next;
+            }
+        }
+        return num;
+    }
+    bool empty()
+    {
+        return end == head;
+    }
+    void reverse()
+    {
+
+    }
+};
+
+// 牛顿迭代法求近似解
+double netfn(double x)
+{
+    return x*x - 2;
+}
+double netfd(double x)
+{
+    return 2 * x;
+}
+double netSolve(double geest, double peer = 10e-5)
+{
+    double ans = geest;
+    while (fabs( netfn(ans)) > peer)
+    {
+        ans -= netfn(ans) / netfd(ans);
+        cout<<ans<<endl;
+    }
+    return ans;
+}
+
 int main()
 {
-    int a[10] = {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9};
-    show(a, 10);
-    othermoveback(a, 10, 3);
-    show(a, 10);
+    // int a[10] = {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9};
+    cout<< netSolve(2)<< endl;
 }
