@@ -150,27 +150,58 @@ func join_work(speaker Speaker) {
 
 // goroutine
 // todo: finish logical
-func personA(web chan string, receive <-chan bool) {
-	for <-receive{
+func person(web chan int, seed int, finish chan<- bool) {
+	var info int 
+	info_num := seed
+	for true {
+		info = <-web
+		if (info < 0) {
+			fmt.Println("player", seed, "\t Bad info! ", info)
+			web <- seed * info_num
+			break
+		}
+		info_num = info_num * 79 % 101
+		web<-info_num
+		fmt.Println("player", seed, "\t send: ", info_num)
 	}
+	finish<- true
 }
-func personB(web chan string, receive <-chan bool) {
-	for <-receive{
-	}
-}
-func personC(web chan string, receive <-chan bool) {
-	for <-receive{
+
+func random_check (web chan int, time int) {
+	var info int
+	for true {
+		info = <- web
+		if (info % 7 ==0 || info < 0) {
+			time--
+			fmt.Println("checker:\t bad info! ", info)
+			web <- -1
+			if (time == 0) {
+				break
+			}
+		} else {
+			fmt.Println("checker:\t ok~ ", info)
+			web <- info
+		}
 	}
 }
 
-func center_check(from <-chan string, to chan<- string, toA,toB,toC chan<- bool) {
+func run_time_system() {
+	var p1, p2, p3 = make(chan bool), make(chan bool), make(chan bool)
+	web := make(chan int)
+	go person(web, 11, p1)
+	go person(web, 38, p2)
+	go person(web, 93, p3)
 
+	go random_check(web, 10000)
+
+	web <- 5
+	<-p1
+	<-p2
+	<-p3
+
+	fmt.Println("over------------")
 }
 
-func run_time() {
-	web := make(chan string)
-	flagA, flagB, flagC := make(chan string)
-}
 // end goroutine
 
 
@@ -184,4 +215,5 @@ func main() {
 	fmt.Println("we can find ++b", testbb)
 	*/
 	// with err, b++ can't as expressment
+	run_time_system()
 }
