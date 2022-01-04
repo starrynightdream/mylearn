@@ -3,7 +3,13 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 )
+
+func speech_dealy(word string, times int, sign chan<- string) {
+	time.Sleep(time.Duration(times) * time.Second)
+	sign<- word
+}
 
 func outputPoint() {
 	testb := 13
@@ -204,6 +210,192 @@ func run_time_system() {
 
 // end goroutine
 
+// goroutine buffer
+func test_buffer_A() {
+	info := make(chan string, 2)
+
+	info <- "hello"
+	info <- "world"
+
+	fmt.Println(<-info)
+	fmt.Println(<-info)
+}
+
+// will err, it can't save two string
+func test_buffer_B() {
+	info := make(chan string)
+
+	info <- "hello"
+	info <- "world"
+
+	fmt.Println(<-info)
+	fmt.Println(<-info)
+}
+
+func test_buffer() {
+	test_buffer_A()
+	fmt.Println("------------------")
+	test_buffer_B() // err
+}
+// end goroutine buffer
+
+// select
+func use_select() {
+	// waiting all sign return at same time
+	info1 := make(chan string)
+	info2 := make(chan string)
+	go speech_dealy("will one second", 1, info1)
+	go speech_dealy("will two second", 2, info2)
+
+	// will wating both of them
+	// one of them come it will run and to next
+	for i:=0; i<2;i++{
+	// there change i < 2, it will check one second at first, two second after
+		select{
+		case msg:= <-info1:
+			fmt.Println("info1: ", msg)
+		case msg:= <-info2:
+			fmt.Println("info2: ", msg)
+		case <-time.After(time.Second * 3):
+			// out of time 3s, will not run
+			// a way for timer
+			fmt.Println("out of time")
+		}
+	}
+}
+
+// select all time
+func select_player(name string, target_ip chan<- int, info <-chan int) {
+	keep_talking := true
+	for keep_talking{
+		select{
+		case i, more := <-info: // more false mean channel close
+			if (!more) {
+				fmt.Println(name, "\t quit chattingroom")
+				keep_talking = false
+			} else{
+				fmt.Println(name, "\t get ", i)
+				target_ip <- (i * 10086 + 23) % 37
+			}
+		default:
+			fmt.Println(name, "\t watting...")
+			time.Sleep(time.Duration(500) * time.Millisecond)
+		}
+	}
+}
+
+func chatting_room(a_ip, b_ip <-chan int, a_info, b_info chan<- int, work_done chan<- bool, seed int) {
+	a_info <- seed // start
+	keep_chatting := true
+	for keep_chatting {
+		select{
+		case a_send:= <-b_ip:
+			if (a_send % 7 == 0) {
+				close(a_info)
+				close(b_info)
+				fmt.Println("ending...")
+				keep_chatting = false
+				work_done<-true
+			} else {
+				b_info <- a_send
+			}
+		case b_send:= <-a_ip:
+			if (b_send % 7 == 0) {
+				close(a_info)
+				close(b_info)
+				fmt.Println("ending...")
+				keep_chatting = false
+				work_done<-true
+			} else {
+				a_info <- b_send
+			}
+		default:
+			fmt.Println("watting charring")
+			time.Sleep(time.Second * 1)
+		}
+	}
+}
+
+func test_async_chatting() {
+	a_ip := make(chan int)
+	b_ip := make(chan int)
+	a_info := make(chan int)
+	b_info := make(chan int)
+
+	wd := make(chan bool)
+
+	go select_player("person", b_ip, a_info)
+	go select_player("genshi", a_ip, b_info)
+
+	go chatting_room(a_ip, b_ip, a_info, b_info, wd, 2)
+
+	<-wd
+}
+
+// chatting ending
+
+// range test
+func boss_send_work(all_work int, jobs chan<- int) {
+	for i := all_work; i>0; i-- {
+		jobs<-i
+		time.Sleep(time.Millisecond * time.Duration(100))
+	}
+	close(jobs)
+}
+
+func woker_due_work(jobs <-chan int, work_done chan<- bool, woker_id int) {
+	// use close() close the channel make range stop
+	for work := range jobs {
+		fmt.Printf("woker%d\t fix work %d\n", woker_id, work)
+	}
+	work_done<-true
+}
+
+func test_working_range() {
+	jobs := make(chan int, 20)
+	wd1 := make(chan bool)
+	wd2 := make(chan bool)
+	go boss_send_work(20, jobs)
+	go woker_due_work(jobs, wd1, 1)
+	go woker_due_work(jobs, wd2, 2)
+
+	<-wd1
+	<-wd2
+}
+// range test for queue end
+
+// timer
+func timer_test() {
+	timer1 := time.NewTimer(time.Second * 2)
+	<- timer1.C
+	fmt.Println("timer1 end")
+
+	// timer different to time.sleep is you can cancel
+	timer2 := time.NewTimer(time.Second * 2)
+	go func() {
+		<-timer2.C
+		fmt.Println("timer2 end")
+	}()
+
+	stop2 := timer2.Stop()
+	if (stop2) { // success stop
+		fmt.Println("timer2 stop")
+	}
+}
+
+// ticker
+func ticker_test() {
+	ticker := time.NewTicker(time.Millisecond * 500)
+	go func () {
+		for t := range ticker.C {
+			fmt.Println("Tick at ", t)
+		}
+	}()
+
+	time.Sleep(time.Second * 4)
+	ticker.Stop()
+	fmt.Println("ticker stop")
+}
 
 func main() {
 
@@ -215,5 +407,6 @@ func main() {
 	fmt.Println("we can find ++b", testbb)
 	*/
 	// with err, b++ can't as expressment
-	run_time_system()
+
+	ticker_test()
 }
