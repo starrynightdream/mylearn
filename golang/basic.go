@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"strings"
+	"math/rand"
 	"time"
+	"sync"
+	"sync/atomic"
 )
 
 func speech_dealy(word string, times int, sign chan<- string) {
@@ -397,6 +400,152 @@ func ticker_test() {
 	fmt.Println("ticker stop")
 }
 
+// worker pool
+func worker_pool_singel_worker(id int, work <-chan int, result chan<- int) {
+	for w := range work {
+		fmt.Printf("woker%d start \t work %d\n", id, w)
+		time.Sleep(time.Second)
+		fmt.Printf("woker%d ending\t work %d\n", id, w)
+		result <- w*2
+	}
+}
+func worker_pool_center() {
+	works := make(chan int, 100)
+	results := make(chan int, 100)
+
+	var wokers_number, works_number = 3, 7
+
+	for i:=0; i< wokers_number; i++ {
+		go worker_pool_singel_worker(i, works, results)
+	}
+
+	for i:=0; i < works_number; i++ {
+		works <- i
+	}
+	close(works)
+	for i:=0; i < works_number; i++ {
+		<-results
+	}
+}
+// end worker pool
+
+// rate limiting
+func normal_rate_limiting() {
+	requests := make(chan int, 5)
+	for i:=0;i<5;i++ {
+		requests <- i
+	}
+	close(requests)
+
+	ticker := time.Tick( time.Millisecond * 500)
+	for req := range requests {
+		<-ticker
+		fmt.Println("request ", req," handle at ", time.Now())
+	}
+}
+
+func short_bursts_rate_limiting() {
+	wd := make(chan bool)
+	wwd := make(chan bool)
+	burstyLimiter := make(chan time.Time, 3)
+	// will find work 0-2 is run nearly same time
+	for i:=0; i<3; i++ {
+		burstyLimiter<-time.Now()
+	}
+
+	go func() {
+		for t := range time.Tick(time.Millisecond * 500) {
+			select {
+			case <-wd:
+				wwd <- true
+				return
+			default:
+				burstyLimiter <- t
+			}
+		}
+	}()
+
+	burstyRequests := make(chan int ,10)
+	for i:=0;i<10;i++ {
+		burstyRequests <- i
+	}
+	close(burstyRequests)
+
+	for req := range burstyRequests {
+		<-burstyLimiter
+		fmt.Println("request ", req," handle at ", time.Now())
+	}
+	wd<-true
+	<-wwd
+}
+// end rate limiting
+
+// add num safe
+func automic_counter() {
+	var t uint64 = 0
+	for i:=0; i<50; i++{
+		// auto kill when main thread end
+		go func (){
+			for {
+				atomic.AddUint64(&t, 1)
+				time.Sleep(time.Millisecond * 1)
+			}
+		}()
+	}
+
+	time.Sleep(time.Second * 2)
+	// the t still update, so we get the copy
+	// use func LoadUint64
+	tFinal := atomic.LoadUint64(&t)
+	fmt.Println("final: ", tFinal)
+}
+
+// state write read
+func state_write_read() {
+	var state = make(map[int]int)
+	var mutex = &sync.Mutex{}
+
+	var readOps, writeOps uint64 = 0, 0
+	
+	for i:=0; i<100; i++ {
+		go func() {
+			// read, close at main end
+			total := 0 // meanless
+			for {
+				key := rand.Intn(5)
+				mutex.Lock()
+				total += state[key]
+				mutex.Unlock()
+				atomic.AddUint64(&readOps, 1)
+				time.Sleep(time.Millisecond)
+			}
+		}()
+	}
+
+	for i:=0; i<5; i++ {
+		go func() {
+			// write, close at main end
+			for {
+				key := rand.Intn(5)
+				val := rand.Intn(100)
+				mutex.Lock()
+				state[key] = val
+				mutex.Unlock()
+				atomic.AddUint64(&writeOps, 1)
+				time.Sleep(time.Millisecond)
+			}
+		}()
+	}
+
+	time.Sleep(time.Second * 2)
+	readOpsFinal := atomic.LoadUint64(&readOps)
+	writeOpsFinal := atomic.LoadUint64(&writeOps)
+	fmt.Printf("total read: %d, total write: %d \n", readOpsFinal, writeOpsFinal)
+	mutex.Lock()
+	fmt.Println(state)
+	mutex.Unlock()
+}
+
 func main() {
 
 	/*
@@ -408,5 +557,5 @@ func main() {
 	*/
 	// with err, b++ can't as expressment
 
-	ticker_test()
+	state_write_read()
 }
