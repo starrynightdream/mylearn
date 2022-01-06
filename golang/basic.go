@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"sort"
 	"math/rand"
 	"time"
 	"sync"
@@ -546,6 +547,91 @@ func state_write_read() {
 	mutex.Unlock()
 }
 
+// statefun_goroutines
+type readOps struct {
+	key int
+	repo chan int
+}
+type writeOps struct{
+	key ,val int
+	repo chan bool
+}
+
+func stateful_goroutines() {
+	var read_count, write_count uint64 = 0, 0
+	
+	reads := make(chan *readOps, 20)
+	writes := make(chan *writeOps, 5)
+
+	// res, make res private
+	// so we can del async.Mutex{}
+	go func() {
+		states := make(map[int]int)
+		for {
+			select{
+			case rop:= <-reads:
+				rop.repo <- states[rop.key]
+			case wop := <-writes:
+				states[wop.key] = wop.val
+				wop.repo <- true
+			}
+		}
+	}()
+
+	// read
+	for i:=0; i<100; i++ {
+
+		go func() {
+			for {
+				rp := &readOps{
+					key: rand.Intn(5),
+					repo: make(chan int) }
+				reads <- rp
+				<-rp.repo
+				atomic.AddUint64(&read_count, 1)
+
+				time.Sleep(time.Millisecond)
+			}
+		}()
+	}
+
+	// write
+	for i:=0; i<5; i++ {
+		go func () {
+			for {
+				wp := &writeOps {
+					key : rand.Intn(5),
+					val : rand.Intn(100),
+					repo : make(chan bool) }
+				writes <- wp
+				<- wp.repo
+				atomic.AddUint64(&write_count, 1)
+				time.Sleep(time.Millisecond)
+			}
+		}()
+	}
+
+	time.Sleep(time.Second * 2)
+	read_count_final := atomic.LoadUint64(&read_count)
+	write_count_final := atomic.LoadUint64(&write_count)
+
+	fmt.Printf("total read: %d, total write: %d \n", read_count_final, write_count_final)
+}
+// end statefun_goroutines
+
+// sort
+func testing_sort() {
+	strs := []string {"ab", "bac", "acd", "aac","abc"}
+	ints := []int {1,3,2,6,8,5,3,21,11}
+	sort.Strings(strs)
+	sort.Ints(ints)
+
+	fmt.Println(strs)
+	fmt.Println(ints)
+	b := sort.IntsAreSorted(ints)
+	fmt.Println(b)
+}
+
 func main() {
 
 	/*
@@ -557,5 +643,5 @@ func main() {
 	*/
 	// with err, b++ can't as expressment
 
-	state_write_read()
+	testing_sort()
 }
