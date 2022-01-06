@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"strings"
 	"sort"
@@ -632,6 +633,67 @@ func testing_sort() {
 	fmt.Println(b)
 }
 
+// interface sort
+type TestingSortStruct struct {
+	first, second int
+}
+type ListTss []TestingSortStruct
+
+func (tss ListTss) Len() int {
+	return len(tss)
+}
+
+func (tss ListTss) Swap(i, j int) {
+	tss[i].first, tss[j].first = tss[j].first, tss[i].first
+	tss[i].second, tss[j].second= tss[j].second, tss[i].second
+}
+
+func (tss ListTss) Less(i, j int) bool {
+	return (tss[i].first < tss[j].first) || (tss[i].first == tss[j].first && tss[i].second < tss[j].second)
+}
+
+func struct_sort() {
+	strss := ListTss{}
+	for i:=0; i < 10; i++ {
+
+		t := TestingSortStruct{
+			first: rand.Intn(10),
+			second: rand.Intn(100) }
+		strss = append(strss, t)
+	}
+	fmt.Println(strss)
+	sort.Sort(strss)
+	fmt.Println(strss)
+}
+
+// panic
+func panic_testing() {
+	panic("a problem")
+	fmt.Println("after")
+}
+
+// defer using
+func using_defer() {
+	f, err := os.Create("playground.md")
+	defer f.Close()
+
+	if err != nil {
+		panic(err)
+		return
+	}
+	for i:=0; i<10000; i++ {
+		fmt.Fprintf(f,"%d ", rand.Intn(100))
+	}
+}
+
+func command_argu() {
+	argsWithProg := os.Args
+	argsWithoutProg := os.Args[1:]
+
+	fmt.Println(argsWithProg)
+	fmt.Println(argsWithoutProg)
+}
+
 func main() {
 
 	/*
@@ -643,5 +705,5 @@ func main() {
 	*/
 	// with err, b++ can't as expressment
 
-	testing_sort()
+	command_argu()
 }
