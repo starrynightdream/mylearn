@@ -45,6 +45,8 @@ docker run 可选镜像 [镜像名称]
         -p 容器端口      # 不往外
         -p 3000
     -P                  # 随机端口
+    -v                  # 挂载数据卷
+        -v 主机目录:容器内目录
     --name              # 取名
     --rm                # 停止即删除
 ```
@@ -70,6 +72,10 @@ docker restart 容器id
 docker stop 容器id
 docker kill 容器id
 ```
+```bash
+docker stats            # 查看运行中的容器的利用信息
+    -a                  # 查看所有的
+```
 
 ## 日志等进阶命令
 ### 日志
@@ -86,7 +92,7 @@ docker top 容器id       # 查看容器进程信息
 ```
 ### 元数据
 ```bash
-docker inspect 容器id
+docker inspect id
 ```
 ### 进入容器
 ```bash
@@ -102,3 +108,31 @@ docker attach 容器id        # 进入当前容器运行的终端
 docker cp 容器id:容器内欲拷贝文件路径 宿主机拷贝目标文件路径
 ```
 之后可以使用 -v 卷技术同步宿主机和容器的内容
+
+## 提交
+```bash
+docker commit -m="描述信息" -a="作者" 容器id 目标镜像名:[TAG] # 提交容器的修改，保存为一个镜像
+```
+## 查看卷数据
+```bash
+docker volume
+    create          # 创建卷
+    inspect         # 显示卷信息
+    ls              # 列举卷
+    prume           # 移除所有为使用的卷
+    rm              # 移除卷
+```
+## dockerfile
+```bash
+docker build    目录
+    -f      文件地址
+    -t      生成目标:tag
+
+```
+### dockersfile文件
+![img](./res/dockerfile_command.jpg)
+> copy 会自动解压，add不会
+
+1. 指令均大写
+2. 从上到下依次执行
+3. `#`为注释
