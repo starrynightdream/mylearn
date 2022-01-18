@@ -129,10 +129,32 @@ docker build    目录
     -t      生成目标:tag
 
 ```
-### dockersfile文件
+### dockersfile文件指令
 ![img](./res/dockerfile_command.jpg)
-> copy 会自动解压，add不会
+> COPY 会自动解压，ADD 不会
+>
+> CMD 只有最后一个会生效，且可被替代。ENTRYPOINT 可以追加命令
+>
+> CMD 在运行容器时追加命令会报错，因为追加命令就是使用CMD，再追加会替换全部
+>
+> ONBUILD 构建的镜像被继承的时候，就会执行
+
+```bash
+# 具体效果
+# dockerfile
+# FROM centos
+# CMD ["ls", "-a"]
+docker run xxxxx -l # 会报错， -l 会替换所有ls -a ，而-l 不是命令。因此报错
+
+# dockerfile
+# FROM centos
+# ENTRYPOINT ["ls", "-a"]
+docker run xxxxx -l # 不会报错， -l 会追加 ls -a -l
+```
 
 1. 指令均大写
 2. 从上到下依次执行
 3. `#`为注释
+
+### 自己的centos
+scratch 是最基础的镜像
