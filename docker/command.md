@@ -57,8 +57,8 @@ docker ps # 显示运行的容器
     -q          # 容器的编号
 ```
 ```bash
-exit            # 容器停止推出
-ctrl+P+Q        # 不停止推出
+exit            # 容器停止退出
+ctrl+P+Q        # 不停止退出
 ```
 ```bash
 docker rm [容器id]
